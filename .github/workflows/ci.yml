@@ -1,0 +1,93 @@
+# ============================================================
+# CI Pipeline - flare_flutter_sdk
+# Runs on every PR and push to main/develop
+# ============================================================
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  # ---- Section: Quality Gate ----
+  quality:
+    name: Format · Analyze · Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.8"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # ---- Format ----
+      - name: Check formatting
+        run: dart format --set-exit-if-changed .
+
+      # ---- Analyze ----
+      - name: Run analyzer
+        run: dart analyze --fatal-infos
+
+      # ---- Test ----
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      # ---- Coverage Threshold ----
+      # Temporarily lowered to 5% during scaffold phase (M1 not yet implemented).
+      # Raise back to 80% once M1 lands with real test coverage.
+      - name: "Check coverage threshold (temporary: 5%)"
+        run: |
+          sudo apt-get install -y lcov
+          lcov --summary coverage/lcov.info
+          COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep "lines" | grep -o '[0-9]*\.[0-9]*%' | head -1 | tr -d '%')
+          echo "Coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 5" | bc -l) )); then
+            echo "Coverage $COVERAGE% is below 5% threshold"
+            exit 1
+          fi
+          echo "Coverage check passed: $COVERAGE%"
+
+      # ---- pub.dev dry run ----
+      - name: pub publish dry-run
+        run: dart pub publish --dry-run
+
+  # ---- Section: Integration Tests (Coston2 Testnet) ----
+  integration:
+    name: Integration Tests (Coston2)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.8"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run integration tests against Coston2 Testnet
+        run: flutter test integration_test/
+        env:
+          FLARE_NETWORK: coston2
+        continue-on-error: true

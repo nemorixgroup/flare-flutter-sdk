@@ -1,0 +1,261 @@
+# Contributing to flare_flutter_sdk
+ 
+Thank you for your interest in contributing to the first native Flutter/Dart
+SDK for the Flare Network. This document defines the standards and workflow
+for all contributions.
+ 
+---
+ 
+## Table of Contents
+ 
+1. [Development Setup](#1-development-setup)
+2. [Branch Strategy](#2-branch-strategy)
+3. [Commit Conventions](#3-commit-conventions)
+4. [Code Standards](#4-code-standards)
+5. [Testing Standards](#5-testing-standards)
+6. [Pre-Commit Gate](#6-pre-commit-gate)
+7. [Pull Request Process](#7-pull-request-process)
+8. [Adding a New Feature](#8-adding-a-new-feature)
+9. [Security Policy](#9-security-policy)
+---
+ 
+## 1. Development Setup
+ 
+**Requirements:**
+ 
+- Flutter SDK >= 3.0.0
+- Dart SDK >= 3.0.0
+- Windows + PowerShell (primary dev environment)
+**Clone and setup:**
+ 
+```powershell
+git clone https://github.com/nemorixgroup/flare-flutter-sdk.git
+cd flare-flutter-sdk
+git checkout develop
+flutter pub get
+```
+ 
+**Verify setup:**
+ 
+```powershell
+.\scripts\pre_commit.ps1
+```
+ 
+All checks must pass green before your first change.
+ 
+---
+ 
+## 2. Branch Strategy
+ 
+main          <- stable releases only (tagged)
+develop       <- integration branch for all features
+feature/*     <- one branch per feature or fix
+ 
+**Branch naming:**
+ 
+Examples:
+feature/crypto-secp256k1
+feature/ftso-feed-client
+feature/fassets-mint-flow
+fix/fdc-verifier-timeout
+docs/readme-quick-start
+ 
+**Rules:**
+ 
+- Never commit directly to `main` or `develop`
+- Every feature branch is created from `develop`
+- Merges to `develop` via Pull Request only
+- Merges to `main` via Pull Request from `develop` at release time
+---
+ 
+## 3. Commit Conventions
+ 
+This project uses **Conventional Commits**.
+Format: `<type>(<scope>): <description>`
+ 
+| Type | When to use |
+|---|---|
+| `feat` | New feature or capability |
+| `fix` | Bug fix |
+| `test` | Adding or updating tests |
+| `docs` | Documentation changes only |
+| `refactor` | Code change with no behavior change |
+| `chore` | Build, deps, CI, tooling |
+| `perf` | Performance improvement |
+ 
+**Scope examples:**
+ 
+feat(crypto): add secp256k1 key generation
+feat(ftso): implement feed ID helper and FtsoV2 client
+feat(fassets): implement FXRP mint flow
+fix(fdc): handle verifier timeout with retry
+test(network): add NetworkConfig URL tests
+docs(readme): add quick start example
+chore(ci): add coverage threshold check
+ 
+**Rules:**
+ 
+- Description in lowercase, no period at end
+- One logical change per commit
+- If a commit closes an issue: add `Closes #42` in the body
+---
+ 
+## 4. Code Standards
+ 
+**Linter:** `very_good_analysis`, zero warnings, zero infos.
+ 
+**Section comments:** Use `// ---- Section Name ----` for logical grouping:
+```dart
+// ---- Constructor ----
+ 
+// ---- Fields ----
+ 
+// ---- Public Methods ----
+ 
+// ---- Private Methods ----
+```
+ 
+**Documentation:** Every public API element must have a dartdoc comment:
+```dart
+/// Reads a single FTSO feed by its encoded feed ID.
+///
+/// Throws [FlareException] if the RPC call fails or the feed ID is unknown.
+///
+/// Example:
+/// ```dart
+/// final feed = await client.ftso.getFeedById(
+///   FeedId.fromName(category: FeedCategory.crypto, name: 'FLR/USD'),
+/// );
+/// ```
+Future<FtsoFeed> getFeedById(FeedId feedId) async { ... }
+```
+ 
+**No hardcoded secrets:** Private keys, mnemonics, and API keys must never
+appear in source code, tests, or logs.
+ 
+**No `print()` statements:** Use proper error propagation via exceptions.
+ 
+---
+ 
+## 5. Testing Standards
+ 
+**Coverage target:** >= 80% line and branch coverage across all modules
+(see the grant milestone targets in the project's Technical Description).
+ 
+**Test file location:** Mirror the `lib/src/` structure under `test/src/`:
+ 
+lib/src/ftso/ftso_client.dart
+test/src/ftso/ftso_client_test.dart
+ 
+**Test structure:**
+ 
+```dart
+void main() {
+  // ---- GroupName ----
+ 
+  group('ClassName', () {
+    setUp(() { ... });
+ 
+    test('does something specific', () {
+      // Arrange
+      // Act
+      // Assert
+    });
+ 
+    test('throws FlareException when ...', () {
+      expect(
+        () => someCall(),
+        throwsA(isA<FlareException>()),
+      );
+    });
+  });
+}
+```
+ 
+**Every feature must include:**
+ 
+- Happy path test
+- Error path tests (invalid input, network failure, edge cases)
+- Security test: private keys must not appear in exception messages
+---
+ 
+## 6. Pre-Commit Gate
+ 
+Run before **every** commit:
+```powershell
+.\scripts\pre_commit.ps1
+```
+ 
+This runs in order:
+1. `dart format --set-exit-if-changed .`
+2. `dart analyze --fatal-infos`
+3. `flutter test`
+**The gate must pass green before any `git commit`.** No exceptions.
+ 
+---
+ 
+## 7. Pull Request Process
+ 
+1. Create your feature branch from `develop`
+2. Make your changes with passing pre-commit
+3. Open a PR targeting `develop`
+4. Fill in the PR template completely
+5. Wait for CI to pass (GitHub Actions)
+6. Request review if needed
+**PR title** must follow Conventional Commits format:
+ 
+feat(ftso): implement feed ID helper and FtsoV2 client
+ 
+---
+ 
+## 8. Adding a New Feature
+ 
+Example: adding `FtsoClient`:
+ 
+```powershell
+# 1. Create branch
+git checkout develop
+git pull origin develop
+git checkout -b feature/ftso-feed-client
+ 
+# 2. Create files
+# lib/src/ftso/ftso_client.dart
+# test/src/ftso/ftso_client_test.dart
+ 
+# 3. Export from barrel file
+# lib/flare_flutter_sdk.dart -> add export
+ 
+# 4. Run pre-commit
+.\scripts\pre_commit.ps1
+ 
+# 5. Commit
+git add .
+git commit -m "feat(ftso): add FtsoClient skeleton with JSON-RPC base"
+ 
+# 6. Push and open PR
+git push origin feature/ftso-feed-client
+```
+ 
+---
+ 
+## 9. Security Policy
+ 
+**Reporting a vulnerability:**
+ 
+- Do NOT open a public GitHub issue for security vulnerabilities
+- Email: flare@nemorixpay.com
+- We will respond within 48 hours
+- A patched version will be released within 7 days of confirmation
+**Key handling rules:**
+ 
+- `PrivateKey` and `Mnemonic` classes must override `toString()` to return
+  a redacted string (e.g., `PrivateKey[REDACTED]`)
+- No key material may appear in exception messages, stack traces, or logs
+- Security tests are non-negotiable blockers for every milestone
+---
+ 
+## Questions?
+ 
+Open a [GitHub Discussion](https://github.com/nemorixgroup/flare-flutter-sdk/discussions),
+reach out on the [Flare Discord](https://discord.com/invite/flarenetwork) in
+the developer channels, or email us at sdks@nemorixpay.com

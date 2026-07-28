@@ -50,14 +50,14 @@ jobs:
       # ---- Coverage Threshold ----
       # Temporarily lowered to 5% during scaffold phase (M1 not yet implemented).
       # Raise back to 80% once M1 lands with real test coverage.
-      - name: Check coverage threshold (temporary: 5%)
+      - name: "Check coverage threshold (temporary: 5%)"
         run: |
           sudo apt-get install -y lcov
           lcov --summary coverage/lcov.info
           COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep "lines" | grep -o '[0-9]*\.[0-9]*%' | head -1 | tr -d '%')
           echo "Coverage: $COVERAGE%"
           if (( $(echo "$COVERAGE < 5" | bc -l) )); then
-            echo "Coverage $COVERAGE% is below 80% threshold"
+            echo "Coverage $COVERAGE% is below 5% threshold"
             exit 1
           fi
           echo "Coverage check passed: $COVERAGE%"

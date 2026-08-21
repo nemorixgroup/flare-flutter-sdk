@@ -5,7 +5,29 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/)
 (with `-dev` pre-release tags before v1.0.0).
- 
+
+## 0.0.2-dev
+
+M1 in progress: network foundation implemented and verified against
+official RPC endpoints and chain IDs.
+
+### Added
+
+- `NetworkConfig.forNetwork()`: resolves the official RPC URL, chain
+  ID, and native currency symbol for each of the four Flare networks
+  (Flare, Songbird, Coston2, Coston), sourced from
+  dev.flare.network's Network Configuration page
+- `currencySymbol` field added to `NetworkConfig`
+- 5 unit tests covering each network's resolved values and chain ID
+  uniqueness across all four networks
+
+### Status
+
+M1 in progress: network foundation complete and tested. Contract
+Registry client is next.  
+Not ready for production use.  
+Next: `ContractRegistryClient.getContractAddress` (`0.0.3-dev`).
+
 ## 0.0.1-dev
 
 Scaffold phase complete: project structure, tooling, and CI pipeline in

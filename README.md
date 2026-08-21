@@ -6,7 +6,7 @@
 [![license: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![style: very good analysis](https://img.shields.io/badge/style-very_good_analysis-B22C89.svg)](https://pub.dev/packages/very_good_analysis)
  
-> **Status: early development (v0.0.1-dev).** See [Roadmap](#roadmap) below for the release plan. Star or watch this repository to follow progress.
+> **Status: early development (v0.0.2-dev).** See [Roadmap](#roadmap) below for the release plan. Star or watch this repository to follow progress.
  
 ---
  
@@ -32,24 +32,41 @@ Linux, and Web.
   attestation types the flow requires (AddressValidity, Payment,
   EVMTransaction)  
 
-## Quick Start (planned API, subject to change before v1.0.0)
+## Documentation & Knowledge Base
  
+This SDK is built on top of the [Flare Knowledge Base](https://github.com/nemorixgroup/Flare-Knowledge-Base), an in-depth guide to the Flare Network covering consensus,
+architecture, flare data connector, development ecosystem, use cases, etc. Recommended
+reading before diving into the SDK internals.
+
+Every implementation decision behind this SDK - library choices,
+encoding standards, verification against official specs - is
+documented in [docs-sdk/](https://github.com/nemorixgroup/Flare-Knowledge-Base/blob/main/docs-sdk/README.md).
+
+## Installation
+
 ```yaml
+# pubspec.yaml
 dependencies:
-  flare_flutter_sdk: ^0.0.1-dev
+  flare_flutter_sdk: ^0.0.2-dev
 ```
+
+```bash
+flutter pub get
+```
+
+## Quick Start  
  
+
 ```dart
 import 'package:flare_flutter_sdk/flare_flutter_sdk.dart';
- 
+
 Future<void> main() async {
-  final client = FlareClient(network: FlareNetwork.coston2);
- 
-  // Connect a wallet
-  final wallet = await LocalWallet.fromMnemonic(myMnemonic);
- 
+  final config = NetworkConfig.forNetwork(FlareNetwork.coston2);
+  final registry = ContractRegistryClient(config);
+
   // Read a live FTSO price feed
-  final feed = await client.ftso.getFeedById(
+  final ftso = FtsoClient(registry);
+  final feed = await ftso.getFeedById(
     FeedId.fromName(category: FeedCategory.crypto, name: 'FLR/USD'),
   );
   print('FLR/USD: ${feed.value}');
@@ -60,18 +77,12 @@ Future<void> main() async {
  
 | Milestone | Scope | Status |
 |---|---|---|
-| M1 | Network foundation, Contract Registry, wallet abstraction | Planned |
-| M2 | Core transactions (native + ERC-20, contract calls) | Planned |
-| M3 | FTSO price feed client | Planned |
-| M4 | FAssets (FXRP) mint/redeem + minimum FDC support | Planned |
-| M5 | Tests, docs, examples, v1.0.0 release on pub.dev | Planned |
+| M1 | Network foundation, Contract Registry, wallet abstraction | 🔄 In Progress |
+| M2 | Core transactions (native + ERC-20, contract calls) | ⏳ Planned |
+| M3 | FTSO price feed client | ⏳ Planned |
+| M4 | FAssets (FXRP) mint/redeem + minimum FDC support | ⏳ Planned |
+| M5 | Tests, docs, examples, v1.0.0 release on pub.dev | ⏳ Planned |
  
- 
-## Documentation
- 
-A bilingual (Spanish/English) knowledge base accompanies this SDK; the
-English README here is the canonical quick-start reference, with deeper
-technical write-ups published as the corresponding milestones land.
  
 ## Contributing
  
@@ -82,7 +93,18 @@ and code standards.
 ## License
  
 Licensed under the [Apache License 2.0](LICENSE).
- 
+
+## For LATAM developers
+
+This SDK is being developed with native support for the region in mind:
+
+- Bilingual documentation (English / Spanish) from the very first module.
+- Part of Nemorix Group's SDK ecosystem for financial infrastructure
+  in LATAM (Hedera, Avalanche, XRPL, Flare).
+- Developed by [Nemorix Group](https://nemorixpay.com), Ohio, USA.
+
+Follow us for updates: **sdks@nemorixpay.com**
+
 ## Links
  
 - Package: [pub.dev/packages/flare_flutter_sdk](https://pub.dev/packages/flare_flutter_sdk)
@@ -95,7 +117,7 @@ Licensed under the [Apache License 2.0](LICENSE).
 If this SDK is useful to you or your team, consider supporting its
 development. Every contribution helps cover infrastructure,
 documentation, and the time invested in building and maintaining this
-open source tool for the Avalanche and Flutter community. Thank you!
+open source tool for the Flare Network and Flutter community. Thank you!
 
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/nemorixgroupllc)
 [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub-EA4AAA?logo=github-sponsors&logoColor=white)](https://github.com/sponsors/nemorixgroup)
@@ -103,7 +125,4 @@ open source tool for the Avalanche and Flutter community. Thank you!
 
 ---
 
-<p align="center">
-  <sub>Built by <a href="https://nemorixpay.com">Nemorix Group</a>
-  · Apache 2.0</sub>
-</p>
+Built by [Nemorix Group](https://nemorixpay.com) · Apache 2.0

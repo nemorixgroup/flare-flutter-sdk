@@ -8,7 +8,7 @@ import 'm1/network_configuration_example.dart';
 /// Each milestone's examples also run standalone, see the `m1/`, `m2/`,
 /// etc. folders as they land. This file is the canonical entry point
 /// pub.dev links to from the package's example tab.
-/// 
+///
 /// GitHub:
 /// https://github.com/nemorixgroup/flare-flutter-sdk/tree/main/example
 Future<void> main() async {

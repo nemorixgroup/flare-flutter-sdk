@@ -1,12 +1,17 @@
-# flare_flutter_sdk
- 
-**The first native Flutter/Dart SDK for the Flare Network.**
- 
+
 [![pub package](https://img.shields.io/pub/v/flare_flutter_sdk.svg)](https://pub.dev/packages/flare_flutter_sdk)
 [![license: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![style: very good analysis](https://img.shields.io/badge/style-very_good_analysis-B22C89.svg)](https://pub.dev/packages/very_good_analysis)
+
+**English** | [Español](README.es.md)   
+
+# flare_flutter_sdk
  
-> **Status: early development (v0.0.2-dev).** See [Roadmap](#roadmap) below for the release plan. Star or watch this repository to follow progress.
+**The first native Flutter/Dart SDK for the Flare Network.**
+
+> **Status: Early Development** - API is not stable.  
+> M1 (Foundation & Wallet) in progress. See
+> [CHANGELOG.md](CHANGELOG.md) for details.
  
 ---
  
@@ -47,7 +52,7 @@ documented in [docs-sdk/](https://github.com/nemorixgroup/Flare-Knowledge-Base/b
 ```yaml
 # pubspec.yaml
 dependencies:
-  flare_flutter_sdk: ^0.0.2-dev
+  flare_flutter_sdk: ^0.0.3-dev
 ```
 
 ```bash
@@ -56,22 +61,24 @@ flutter pub get
 
 ## Quick Start  
  
-
 ```dart
 import 'package:flare_flutter_sdk/flare_flutter_sdk.dart';
 
 Future<void> main() async {
+  // Resolve network configuration (works today)
   final config = NetworkConfig.forNetwork(FlareNetwork.coston2);
-  final registry = ContractRegistryClient(config);
+  print('Connected to chain ID ${config.chainId} via ${config.rpcUrl}');
 
-  // Read a live FTSO price feed
-  final ftso = FtsoClient(registry);
-  final feed = await ftso.getFeedById(
-    FeedId.fromName(category: FeedCategory.crypto, name: 'FLR/USD'),
-  );
-  print('FLR/USD: ${feed.value}');
+  // Resolve an official contract address via the Contract Registry
+  // (works today, makes a real RPC call)
+  final registry = ContractRegistryClient(config);
+  final wNatAddress = await registry.getContractAddress('WNat');
+  print('WNat address on Coston2: $wNatAddress');
 }
 ```
+
+> The example above runs today against Coston2. Wallets, transactions,
+> FTSO, and FAssets are still in progress.
  
 ## Roadmap
  
@@ -86,7 +93,7 @@ Future<void> main() async {
  
 ## Contributing
  
-Contributions are welcome once the core architecture from M1 lands. See
+Contributions are welcome once the core architecture from M4 lands. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, branch strategy,
 and code standards.
  

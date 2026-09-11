@@ -6,6 +6,44 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/)
 (with `-dev` pre-release tags before v1.0.0).
 
+## 0.0.3-dev
+
+M1 in progress: Contract Registry client implemented and verified
+against the official FlareContractRegistry specification.
+
+### Added
+
+- `JsonRpcClient` (`network/`): shared JSON-RPC 2.0 transport over
+  HTTPS, used by every module that reads from or writes to a Flare
+  network
+- `ContractRegistryClient.getContractAddress()`: resolves official
+  contract addresses via the FlareContractRegistry
+  (`0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019`), verified against
+  dev.flare.network's JS, Go, and FAssets integration guides
+- Hand-rolled ABI encoding/decoding for
+  `getContractAddressByName(string)`, no external EVM library
+  dependency
+- 3 unit tests with mocked HTTP responses, covering a successful
+  resolution, an unregistered contract name, and a non-200 HTTP
+  response
+
+### Design Decisions
+
+- Chose to hand-encode the ABI call instead of adding a generic EVM
+  library dependency, keeping the SDK's dependency surface intentional
+  rather than pulling in a full library for one function call
+- The registry returns the zero address instead of reverting for an
+  unknown contract name, so `getContractAddress` checks for it
+  explicitly and throws `FlareException` rather than returning an
+  invalid address silently
+
+### Status
+
+M1 in progress: network foundation and Contract Registry client
+complete and tested. Local wallet is next.  
+Not ready for production use.  
+Next: `LocalWallet` key derivation (`0.0.4-dev`).
+
 ## 0.0.2-dev
 
 M1 in progress: network foundation implemented and verified against

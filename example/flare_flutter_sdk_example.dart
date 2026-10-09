@@ -1,6 +1,7 @@
 // This is an example file; print statements here are intentional output,
 // not debugging leftovers.
 import 'm1/contract_registry_client_example.dart';
+import 'm1/local_wallet_example.dart';
 import 'm1/network_configuration_example.dart';
 
 /// Combined walkthrough of flare_flutter_sdk, milestone by milestone.
@@ -15,4 +16,5 @@ Future<void> main() async {
   // ---- M1: Foundation & Wallet ----
   await runNetworkConfigurationExample();
   await runContractRegistryClientExample();
+  await runLocalWalletExample();
 }

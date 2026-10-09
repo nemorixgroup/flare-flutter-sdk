@@ -6,6 +6,55 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/)
 (with `-dev` pre-release tags before v1.0.0).
 
+## 0.0.4-dev
+
+M1 in progress: local wallet key derivation and balance reads
+implemented and verified against known test vectors.
+
+### Added
+
+- `LocalWallet.fromMnemonic()`: derives a wallet from a BIP-39 mnemonic
+  along the BIP-44 path `m/44'/60'/account'/0/address`, with optional
+  `accountIndex`, `addressIndex`, and BIP-39 `passphrase`
+- `LocalWallet.getAddress()`: returns the C-Chain address with an
+  EIP-55 checksum
+- `LocalWallet.getBalance()`: reads the native balance in wei via
+  `eth_getBalance` on the network the wallet is bound to
+- `LocalWallet.config`: exposes the `NetworkConfig` of the wallet's
+  network
+- `example/m1/local_wallet_example.dart`, also added to the combined
+  walkthrough
+- 23 unit tests: known vectors (Hardhat accounts 0 and 1, the BIP-39
+  "abandon" mnemonic), derivation parameters, network binding, input
+  validation, and `getBalance` against mocked RPC responses (zero,
+  large values, RPC errors, HTTP errors, malformed results)
+
+### Design Decisions
+
+- Derivation path `m/44'/60'/0'/0/0` (Ethereum coin type 60) follows
+  the default of Flare's official `flare-stake-tool`, and the C-Chain
+  address space matches Ethereum's (20-byte ECDSA addresses), as stated
+  on dev.flare.network's Network page
+- Addresses use EIP-55 checksum casing, the Ethereum convention for
+  mixed-case addresses; it is an interoperability choice, not a Flare
+  requirement
+- The network is a required parameter of `fromMnemonic`: the address is
+  identical on every Flare network, but balances (and later the signing
+  chain ID) are not, so there is no silent default network
+- The private key has no getter and never leaves `LocalWallet`
+- Invalid mnemonics throw `FlareException` (user input); out-of-range
+  indexes throw `RangeError` (programmer error)
+- An optional `JsonRpcClient` can be injected for tests, following the
+  same pattern as `ContractRegistryClient`; a client targeting a
+  different network than the wallet is rejected
+
+### Status
+
+M1 in progress: network foundation, Contract Registry client, and local
+wallet key derivation and balance complete and tested.  
+Not ready for production use.  
+Next: P-Chain address derivation (`0.0.5-dev`).
+
 ## 0.0.3-dev
 
 M1 in progress: Contract Registry client implemented and verified

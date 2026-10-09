@@ -52,7 +52,7 @@ documented in [docs-sdk/](https://github.com/nemorixgroup/Flare-Knowledge-Base/b
 ```yaml
 # pubspec.yaml
 dependencies:
-  flare_flutter_sdk: ^0.0.3-dev
+  flare_flutter_sdk: ^0.0.4-dev
 ```
 
 ```bash
@@ -74,11 +74,20 @@ Future<void> main() async {
   final registry = ContractRegistryClient(config);
   final wNatAddress = await registry.getContractAddress('WNat');
   print('WNat address on Coston2: $wNatAddress');
+
+  // Derive a local wallet and read its balance (works today).
+  // WARNING: this is a public test mnemonic; never use a real one in code.
+  final wallet = await LocalWallet.fromMnemonic(
+    'test test test test test test test test test test test junk',
+    network: FlareNetwork.coston2,
+  );
+  print('Address: ${await wallet.getAddress()}');
+  print('Balance: ${await wallet.getBalance()} wei');
 }
 ```
 
-> The example above runs today against Coston2. Wallets, transactions,
-> FTSO, and FAssets are still in progress.
+> The example above runs today against Coston2. Transaction signing,
+> WalletConnect, transactions, FTSO, and FAssets are still in progress.
  
 ## Roadmap
  

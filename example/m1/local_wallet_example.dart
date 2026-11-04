@@ -13,12 +13,12 @@ Future<void> main() async {
   await runLocalWalletExample();
 }
 
-/// Derives a wallet from a test mnemonic and prints its address and its
-/// Coston2 balance.
+/// Derives a wallet from a test mnemonic and prints its C-Chain address,
+/// its P-Chain address and its Coston2 balance.
 ///
 /// WARNING: the mnemonic below is a public test phrase (the default
 /// Hardhat development mnemonic). Never put a real mnemonic in source
-/// code, and never fund the address derived from this one.
+/// code, and never fund the addresses derived from this one.
 ///
 /// Extracted as its own function so `flare_flutter_sdk_example.dart` can
 /// call it as part of the combined walkthrough.
@@ -26,16 +26,18 @@ Future<void> runLocalWalletExample() async {
   const mnemonic =
       'test test test test test test test test test test test junk';
 
-  // The address is the same on every Flare network; the network only
-  // decides where the balance is read from.
+  // The C-Chain address is the same on every Flare network; the network
+  // decides the P-Chain prefix and where the balance is read from.
   final wallet = await LocalWallet.fromMnemonic(
     mnemonic,
     network: FlareNetwork.coston2,
   );
 
   final address = await wallet.getAddress();
+  final pChainAddress = await wallet.getPChainAddress();
   final balanceWei = await wallet.getBalance();
 
-  print('Address: $address');
+  print('C-Chain address: $address');
+  print('P-Chain address: $pChainAddress');
   print('Balance on Coston2: $balanceWei wei');
 }

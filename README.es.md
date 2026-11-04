@@ -52,7 +52,7 @@ documentada en [docs-sdk/](https://github.com/nemorixgroup/Flare-Knowledge-Base/
 ```yaml
 # pubspec.yaml
 dependencies:
-  flare_flutter_sdk: ^0.0.4-dev
+  flare_flutter_sdk: ^0.0.5-dev
 ```
 
 ```bash
@@ -75,14 +75,16 @@ Future<void> main() async {
   final wNatAddress = await registry.getContractAddress('WNat');
   print('WNat address on Coston2: $wNatAddress');
 
-  // Deriva una wallet local y lee su balance (funciona hoy).
+  // Deriva una wallet local, sus direcciones C-Chain y P-Chain, y lee su
+  // balance (funciona hoy).
   // ADVERTENCIA: este es un mnemónico público de prueba; nunca uses uno
   // real en el código.
   final wallet = await LocalWallet.fromMnemonic(
     'test test test test test test test test test test test junk',
     network: FlareNetwork.coston2,
   );
-  print('Address: ${await wallet.getAddress()}');
+  print('C-Chain address: ${await wallet.getAddress()}');
+  print('P-Chain address: ${await wallet.getPChainAddress()}');
   print('Balance: ${await wallet.getBalance()} wei');
 }
 ```

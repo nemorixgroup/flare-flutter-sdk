@@ -6,6 +6,56 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/)
 (with `-dev` pre-release tags before v1.0.0).
 
+## 0.0.5-dev
+
+M1 in progress: P-Chain address derivation for the local wallet,
+verified against the official `flare-stake-tool` sample address.
+
+### Added
+
+- `LocalWallet.getPChainAddress()`: returns the wallet's P-Chain
+  address (Bech32, with the `P-` prefix) for the network the wallet is
+  bound to, for example `P-flare1...` on Flare and `P-costwo1...` on
+  Coston2
+- Internal `PChainAddress` (SHA-256, RIPEMD-160, Bech32 with a
+  per-network prefix) and `Bech32` encoder (BIP-173), not exported
+  from the public barrel
+- `example/m1/local_wallet_example.dart` now prints the P-Chain address
+- 18 unit tests (52 in total): the official stake tool sample address,
+  the BIP-173 Bech32 vectors, per-network vectors generated outside
+  Dart with an independent implementation, input validation, and the
+  wallet-level behavior
+
+### Design Decisions
+
+- The P-Chain and C-Chain addresses come from the same public key, as
+  the official `flare-stake-tool` documents, so the wallet reuses the
+  key derived at `m/44'/60'/account'/0/address` and only stores its
+  compressed form in addition
+- Flare's documentation does not spell out the derivation steps
+  (SHA-256, RIPEMD-160, Bech32). They follow Avalanche, which Flare
+  forks, and were validated by reproducing the official tool's sample
+  address from its sample public key
+- Bech32 prefixes: `flare`, `songbird` and `coston` come from the
+  constants in Flare's `go-flare` repository. `costwo` (Coston2) is
+  confirmed by the network name in `flare-stake-tool` and by a third
+  party integration, but is not listed in `go-flare`'s constants page
+- `getPChainAddress()` lives on `LocalWallet` only, not on the `Wallet`
+  interface: a WalletConnect wallet has no access to a P-Chain public
+  key, so adding it to the interface would force a method that cannot
+  be honored
+- Bech32 is hand-rolled (encoder only), the same dependency-surface
+  decision made for the ABI encoding in `0.0.3-dev`
+- Out of scope: the P-Chain balance, which uses a different endpoint
+  (`/ext/bc/P`) than the C-Chain `JsonRpcClient`
+
+### Status
+
+M1 in progress: network foundation, Contract Registry client, local
+wallet (C-Chain and P-Chain addresses, balance) complete and tested.  
+Not ready for production use.   
+Next: `LocalWallet` transaction signing (`0.0.6-dev`).  
+
 ## 0.0.4-dev
 
 M1 in progress: local wallet key derivation and balance reads

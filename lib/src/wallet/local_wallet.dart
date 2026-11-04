@@ -8,6 +8,7 @@ import 'package:flare_flutter_sdk/src/exceptions/flare_exception.dart';
 import 'package:flare_flutter_sdk/src/network/flare_network.dart';
 import 'package:flare_flutter_sdk/src/network/json_rpc_client.dart';
 import 'package:flare_flutter_sdk/src/network/network_config.dart';
+import 'package:flare_flutter_sdk/src/wallet/p_chain_address.dart';
 import 'package:flare_flutter_sdk/src/wallet/wallet.dart';
 import 'package:pointycastle/export.dart';
 
@@ -18,9 +19,13 @@ import 'package:pointycastle/export.dart';
 /// the standard BIP-44 path `m/44'/60'/account'/0/address`, the same
 /// default used by Flare's official `flare-stake-tool`.
 ///
-/// A wallet is bound to one [FlareNetwork] when it is created. The address
-/// is identical on every network, but the balance (and, later, the chain
-/// ID used for signing) is not, so the network is explicit and required.
+/// The same key also gives the wallet a P-Chain address (Bech32, used for
+/// staking and delegation); see [getPChainAddress].
+///
+/// A wallet is bound to one [FlareNetwork] when it is created. The C-Chain
+/// address is identical on every network, but the P-Chain address prefix,
+/// the balance and, later, the chain ID used for signing are not, so the
+/// network is explicit and required.
 ///
 /// The private key never leaves this class: there is no getter for it.
 ///
@@ -33,17 +38,27 @@ import 'package:pointycastle/export.dart';
 /// );
 /// print(await wallet.getAddress());
 /// // 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+/// print(await wallet.getPChainAddress()); // P-costwo1...
 /// print(await wallet.getBalance()); // balance in wei
 /// ```
 ///
 /// See the official network reference:
 /// https://dev.flare.network/network/overview
 class LocalWallet implements Wallet {
-  LocalWallet._(this._privateKey, this._address, this._rpc);
+  LocalWallet._(
+    this._privateKey,
+    this._compressedPublicKey,
+    this._address,
+    this._rpc,
+  );
 
   /// Private key bytes, kept in memory only and never exposed.
   // ignore: unused_field, used by the signing step in a later version.
   final Uint8List _privateKey;
+
+  /// Compressed secp256k1 public key (33 bytes), the source of both the
+  /// C-Chain and the P-Chain address.
+  final Uint8List _compressedPublicKey;
 
   /// EIP-55 checksummed C-Chain address (`0x` + 40 hex characters).
   final String _address;
@@ -137,6 +152,8 @@ class LocalWallet implements Wallet {
 
     return LocalWallet._(
       privateKey,
+      // The P-Chain address is derived from the compressed form of the key.
+      point.getEncoded(),
       _toChecksumAddress(addressBytes),
       rpcClient ?? JsonRpcClient(NetworkConfig.forNetwork(network)),
     );
@@ -144,6 +161,24 @@ class LocalWallet implements Wallet {
 
   @override
   Future<String> getAddress() async => _address;
+
+  /// Returns this wallet's P-Chain address, with the `P-` prefix, for the
+  /// network the wallet is bound to (for example `P-flare1...` on Flare
+  /// and `P-costwo1...` on Coston2).
+  ///
+  /// The P-Chain is Flare's platform chain, used for staking and
+  /// delegation. Its address is derived from the same public key as the
+  /// C-Chain address returned by [getAddress].
+  ///
+  /// Example:
+  /// ```dart
+  /// final pChainAddress = await wallet.getPChainAddress();
+  /// ```
+  Future<String> getPChainAddress() async =>
+      PChainAddress.fromCompressedPublicKey(
+        _compressedPublicKey,
+        network: config.network,
+      );
 
   /// Returns this wallet's native balance, in wei (18 decimals), on the
   /// network the wallet is bound to.

@@ -9,6 +9,7 @@ export 'src/ftso/ftso_client.dart';
 export 'src/network/flare_network.dart';
 export 'src/network/network_config.dart';
 export 'src/registry/contract_registry_client.dart';
+export 'src/transactions/eip1559_transaction.dart';
 export 'src/transactions/transaction_builder.dart';
 export 'src/wallet/local_wallet.dart';
 export 'src/wallet/wallet.dart';

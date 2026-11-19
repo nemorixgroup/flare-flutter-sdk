@@ -8,7 +8,9 @@ import 'package:flare_flutter_sdk/src/exceptions/flare_exception.dart';
 import 'package:flare_flutter_sdk/src/network/flare_network.dart';
 import 'package:flare_flutter_sdk/src/network/json_rpc_client.dart';
 import 'package:flare_flutter_sdk/src/network/network_config.dart';
+import 'package:flare_flutter_sdk/src/transactions/eip1559_transaction.dart';
 import 'package:flare_flutter_sdk/src/wallet/p_chain_address.dart';
+import 'package:flare_flutter_sdk/src/wallet/secp256k1_signer.dart';
 import 'package:flare_flutter_sdk/src/wallet/wallet.dart';
 import 'package:pointycastle/export.dart';
 
@@ -24,8 +26,8 @@ import 'package:pointycastle/export.dart';
 ///
 /// A wallet is bound to one [FlareNetwork] when it is created. The C-Chain
 /// address is identical on every network, but the P-Chain address prefix,
-/// the balance and, later, the chain ID used for signing are not, so the
-/// network is explicit and required.
+/// the balance and the chain ID used for signing are not, so the network
+/// is explicit and required.
 ///
 /// The private key never leaves this class: there is no getter for it.
 ///
@@ -53,7 +55,6 @@ class LocalWallet implements Wallet {
   );
 
   /// Private key bytes, kept in memory only and never exposed.
-  // ignore: unused_field, used by the signing step in a later version.
   final Uint8List _privateKey;
 
   /// Compressed secp256k1 public key (33 bytes), the source of both the
@@ -198,9 +199,58 @@ class LocalWallet implements Wallet {
     return _parseHexQuantity(result);
   }
 
+  /// Signs [unsignedTx] and returns the signed transaction as a
+  /// `0x`-prefixed hex string, ready to be sent with
+  /// `eth_sendRawTransaction`.
+  ///
+  /// Only [Eip1559Transaction] is supported. The chain ID is the one of the
+  /// network this wallet is bound to, so the signature is only valid on
+  /// that network. The signature is deterministic (RFC 6979) and uses the
+  /// lower `s` value required by EIP-2.
+  ///
+  /// This method signs and does not send: nothing leaves the device.
+  ///
+  /// Throws an [ArgumentError] if [unsignedTx] is not an
+  /// [Eip1559Transaction].
+  ///
+  /// Example:
+  /// ```dart
+  /// final rawTx = await wallet.signTransaction(
+  ///   Eip1559Transaction(
+  ///     nonce: 0,
+  ///     maxPriorityFeePerGas: BigInt.from(2000000000),
+  ///     maxFeePerGas: BigInt.from(1000000000000),
+  ///     gasLimit: 21000,
+  ///     to: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+  ///     value: BigInt.from(10).pow(18),
+  ///   ),
+  /// );
+  /// ```
   @override
-  Future<String> signTransaction(Object unsignedTx) async =>
-      throw UnimplementedError();
+  Future<String> signTransaction(Object unsignedTx) async {
+    if (unsignedTx is! Eip1559Transaction) {
+      throw ArgumentError.value(
+        unsignedTx.runtimeType,
+        'unsignedTx',
+        'must be an Eip1559Transaction',
+      );
+    }
+
+    // ---- Signing ----
+
+    // The wallet supplies the chain ID of its own network.
+    final chainId = config.chainId;
+    final hash = _keccak256(unsignedTx.encodeForSigning(chainId));
+    final signature = Secp256k1Signer.sign(hash, _privateKey);
+
+    final signed = unsignedTx.encodeSigned(
+      chainId: chainId,
+      yParity: signature.yParity,
+      r: signature.r,
+      s: signature.s,
+    );
+    return '0x${_toHex(signed)}';
+  }
 
   // ---- Helpers ----
 

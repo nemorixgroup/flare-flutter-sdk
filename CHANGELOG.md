@@ -6,6 +6,65 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/)
 (with `-dev` pre-release tags before v1.0.0).
 
+## 0.0.6-dev
+
+M1 in progress: local transaction signing implemented and verified
+byte for byte against independent implementations.
+
+### Added
+
+- `Eip1559Transaction`: an unsigned EIP-1559 (type 2) transaction for
+  Flare's C-Chain, with `encodeForSigning()` and `encodeSigned()`
+- `LocalWallet.signTransaction()`: signs an `Eip1559Transaction` and
+  returns the raw transaction as a `0x`-prefixed hex string, ready for
+  `eth_sendRawTransaction`
+- Internal `Rlp` encoder (EIP-2718 serialization) and `Secp256k1Signer`
+  (deterministic signing), neither exported from the public barrel
+- `example/m1/local_wallet_example.dart` now signs a transfer
+- 64 unit tests (116 in total): RLP vectors from ethereum.org and the
+  Python `rlp` package, and signed transactions and signatures generated
+  outside Dart with `eth-account` and `eth_keys`, reproduced byte for
+  byte by the SDK
+
+### Design Decisions
+
+- Only type 2 transactions are supported. Flare accepts both type 0
+  (legacy) and type 2 per its documentation, and type 2 covers the
+  normal case; type 0 can be added later without changing this API
+- The chain ID is not part of the transaction: the wallet supplies the
+  chain ID of the network it is bound to, so a transaction cannot be
+  signed for the wrong network by mistake
+- Signing uses `pointycastle` with an RFC 6979 deterministic nonce
+  (HMAC-SHA256), written in the SDK instead of relying on a third party
+  signer whose behavior could not be verified. `s` is forced into the
+  lower half of the curve order (EIP-2), flipping the y parity with it
+- The y parity (recovery id) comes straight from the nonce point, with
+  no trial recovery of the public key
+- `Eip1559Transaction` rejects a `maxFeePerGas` below
+  `maxPriorityFeePerGas`. Flare's documentation does not state this
+  rule; it is the common client rule in the Ethereum ecosystem
+- The access list is always empty; Flare's documentation does not
+  mention type 1 transactions
+- The SDK signs only and sends nothing: broadcasting, nonce lookup and
+  fee estimation belong to M2. Note for M2: go-flare v1.14.0 raised the
+  minimum C-chain base fee from 25 to 500 GWei (activated between June
+  and July 2026), so fees must come from the network, not constants
+- Error messages never include the private key
+
+### Known Limitations
+
+- Dart big integers do not run in constant time, so signing is meant
+  for client side use
+- The recipient checksum (EIP-55) is not verified, only the format
+
+### Status
+
+M1 in progress: network foundation, Contract Registry client, local
+wallet (C-Chain and P-Chain addresses, balance, transaction signing)
+complete and tested.  
+Not ready for production use.  
+Next: `WalletConnectController` (`0.0.7-dev`).
+
 ## 0.0.5-dev
 
 M1 in progress: P-Chain address derivation for the local wallet,

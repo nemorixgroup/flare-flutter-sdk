@@ -52,7 +52,7 @@ documentada en [docs-sdk/](https://github.com/nemorixgroup/Flare-Knowledge-Base/
 ```yaml
 # pubspec.yaml
 dependencies:
-  flare_flutter_sdk: ^0.0.5-dev
+  flare_flutter_sdk: ^0.0.6-dev
 ```
 
 ```bash
@@ -89,8 +89,35 @@ Future<void> main() async {
 }
 ```
 
-> El ejemplo de arriba corre hoy contra Coston2. La firma de transacciones,
-> WalletConnect, transacciones, FTSO, y FAssets siguen en progreso.
+```dart
+  // Deriva una wallet local, sus direcciones C-Chain y P-Chain, lee su
+  // balance y firma una transferencia (funciona hoy).
+  // ADVERTENCIA: este es un mnemónico público de prueba; nunca uses uno
+  // real en el código.
+  final wallet = await LocalWallet.fromMnemonic(
+    'test test test test test test test test test test test junk',
+    network: FlareNetwork.coston2,
+  );
+  print('C-Chain address: ${await wallet.getAddress()}');
+  print('P-Chain address: ${await wallet.getPChainAddress()}');
+  print('Balance: ${await wallet.getBalance()} wei');
+
+  // La firma ocurre en el dispositivo; nada se envía a la red.
+  final rawTx = await wallet.signTransaction(
+    Eip1559Transaction(
+      nonce: 5,
+      maxPriorityFeePerGas: BigInt.from(2000000000),
+      maxFeePerGas: BigInt.from(1000000000000),
+      gasLimit: 21000,
+      to: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+      value: BigInt.from(10).pow(18), // 1 FLR
+    ),
+  );
+  print('Signed transaction: $rawTx');
+  ```
+
+> El ejemplo de arriba corre hoy contra Coston2. El envío de transacciones,
+> WalletConnect, FTSO, y FAssets siguen en progreso.
 
 ## Roadmap
 
